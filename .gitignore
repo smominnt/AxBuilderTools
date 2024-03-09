@@ -1,0 +1,7 @@
+# Ignore IDE files and folders
+.vs/
+
+
+# Ignore build files
+build/
+obj/
