@@ -1,0 +1,26 @@
+﻿<Window 
+    x:Class="AxBuilder.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="MainWindow" 
+    Width="1440" Height="900"
+    MinWidth="1368" MinHeight="800"
+    xmlns:ui="http://schemas.modernwpf.com/2019"
+    ui:WindowHelper.UseModernWindowStyle="True"
+    Closing="Window_Closing">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <!-- This row will take up remaining space -->
+        </Grid.RowDefinitions>
+        <ui:SimpleStackPanel Grid.Row="0" Margin="12" Spacing="24">
+            <TextBlock Text="AX Builder" Style="{StaticResource HeaderTextBlockStyle}" FontSize="22" />
+        </ui:SimpleStackPanel>
+        <Frame x:Name="MainFrame" Grid.Row="1" NavigationUIVisibility="Hidden"
+               HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+    </Grid>
+</Window>
