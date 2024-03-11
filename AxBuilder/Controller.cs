@@ -1,6 +1,4 @@
-﻿using AxBuilder.HelperProperties;
-using System;
-using System.IO;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -30,10 +28,12 @@ namespace AxBuilder
             return new Image { Source = image, Width = width, Height = height };
         }
 
+
         private void LoadJson(string json)
         {
             try
             {
+                ResetApplication();
                 JObject importData = JObject.Parse(json);
                 var extraData = (JObject)importData["export_information"];
                 var startLine = (JObject)importData["start_line"];
@@ -44,16 +44,17 @@ namespace AxBuilder
                 var imageLocation = extraData["image_file_path"].Value<string>();
                 var savedPoints = (JArray)importData["point_data"];
 
-                Units.Tag = isImperial ? 1 : 2;
-                if (isImperial)
+                this.Units.Tag = isImperial ? 1 : 2;
+                this.Distance.Text = Math.Round(distance, 3).ToString();
+                this.Pixels.Text = Math.Round(scale, 3).ToString();
+
+                var image = this.LoadImage(imageLocation);
+                if (image is not null)
                 {
-                    distance *= 3.2808;
+                    MyImage.Source = image;
+                    ImageLocation = imageLocation;
                 }
-                Distance.Text = Math.Round(distance, 3).ToString();
-                LoadImage(imageLocation);
-                ScaleLength = scale;
-                Pixels.Text = Math.Round(scale, 3).ToString();
-                ScaleStatus.IsChecked = true;
+
 
                 foreach (var point in savedPoints)
                 {
@@ -61,8 +62,13 @@ namespace AxBuilder
                     double y = point["y"].Value<double>();
                     double rotation = point["rotation"].Value<double>();
                     int coneId = point["cone_id"].Value<int>();
-                    var cone = AddCone(coneId, x, y, rotation);
-                    if (coneId == 4) { StartGrid = cone; }
+                    var cone = CreateCone(coneId, x, y, rotation);
+                    MyCanvas.Children.Add(cone);
+                    if (coneId == 4) 
+                    {
+                        if (StartGrid is not null) { MyCanvas.Children.Remove(StartGrid); }
+                        StartGrid = cone; 
+                    }
                 }
 
                 StartLine = AddLine(
@@ -72,6 +78,7 @@ namespace AxBuilder
                     startLine["x2"].Value<double>(),
                     startLine["y2"].Value<double>(),
                     startLine["angle"].Value<double>());
+                MyCanvas.Children.Add(StartLine);
 
                 FinishLine = AddLine(
                     finishLine["cone_id"].Value<int>(),
@@ -80,108 +87,99 @@ namespace AxBuilder
                     finishLine["x2"].Value<double>(),
                     finishLine["y2"].Value<double>(),
                     finishLine["angle"].Value<double>());
+                MyCanvas.Children.Add(FinishLine);
+                IsChanged = CheckIfChanges(true);
             }
             catch (Exception ex)
             {
-                ClearAll();
+                ResetApplication();
                 MessageBox.Show($"Error occurred while loading file: {ex.Message}", "Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            SetIsChanged(true);
         }
 
-        private void LoadImage(string imagePath, bool importNew = false)
+
+        private BitmapImage LoadImage(string imagePath, bool importNew = false)
         {
             try
             {
                 string fileName = System.IO.Path.GetFileName(imagePath);
-                string localAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string destinationPath = System.IO.Path.Combine(localAppDataFolder, fileName);
-
-                if (File.Exists(destinationPath) && !importNew)
-                {
-                    ImageLocation = destinationPath;
-                }
-                else
-                {
-                    File.Copy(imagePath, destinationPath, true);
-                    ImageLocation = destinationPath;
-                }
-
                 BitmapImage bitmapImage = new BitmapImage();
                 bitmapImage.BeginInit();
-                bitmapImage.UriSource = new Uri(ImageLocation);
+                bitmapImage.UriSource = new Uri(imagePath);
                 bitmapImage.EndInit();
-                MyImage.Source = bitmapImage;
+
+                if (importNew)
+                {
+                    IsChanged = CheckIfChanges();
+                }
+                return bitmapImage;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Unable to open/load image file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
             }
         }
 
 
-
-        private Viewbox AddCone(int coneId, double x, double y, double angle = 0d)
+        private Viewbox CreateCone(int coneId, double x, double y, double angle = 0d)
         {
             Image newImage;
             double width;
             double height;
-            SetIsChanged();
+            Viewbox viewbox;
 
             if (coneId == 2 || coneId == 4)
             {
                 width = 50;
                 height = 50;
                 newImage = CreateImageFromIcon(GetConeById(coneId), width, height);
-                var viewBox = CreateViewbox(this, newImage, width, height);
-                viewBox.RenderTransformOrigin = new Point(0.75, 0.5);
+                viewbox = CreateViewbox(this, newImage, width, height);
+                viewbox.RenderTransformOrigin = new Point(0.75, 0.5);
 
                 if (angle != 0)
                 {
-                    viewBox.RenderTransform = new RotateTransform
+                    viewbox.RenderTransform = new RotateTransform
                     {
                         Angle = angle
                     };
                 }
 
-                Canvas.SetLeft(viewBox, x - (width / 4) * 3);
-                Canvas.SetTop(viewBox, y - (height / 2));
-
-                MyCanvas.Children.Add(viewBox);
-                return viewBox;
+                Canvas.SetLeft(viewbox, x - (width / 4) * 3);
+                Canvas.SetTop(viewbox, y - (height / 2));
             }
             else
             {
                 width = 25;
                 height = 25;
                 newImage = CreateImageFromIcon(GetConeById(coneId), width, height);
-                var viewBox = CreateViewbox(this, newImage, width, height);
-                viewBox.RenderTransformOrigin = new Point(0.5, 0.5);
+                viewbox = CreateViewbox(this, newImage, width, height);
+                viewbox.RenderTransformOrigin = new Point(0.5, 0.5);
 
                 if (angle != 0)
                 {
-                    viewBox.RenderTransform = new RotateTransform
+                    viewbox.RenderTransform = new RotateTransform
                     {
                         Angle = angle
                     };
                 }
 
-                Canvas.SetLeft(viewBox, x - (width / 2));
-                Canvas.SetTop(viewBox, y - (height / 2));
-
-                MyCanvas.Children.Add(viewBox);
-                return viewBox;
+                Canvas.SetLeft(viewbox, x - (width / 2));
+                Canvas.SetTop(viewbox, y - (height / 2));
             }
+
+            return viewbox;
         }
+
 
         private Viewbox AddLine(int coneId, double x1, double y1, double x2, double y2, double angle = 0d)
         {
             var width = 25;
             var height = 25;
 
-            var leftCone = CreateImageFromIcon(GetConeById(coneId), width, height);
-            var rightCone = CreateImageFromIcon(GetConeById(coneId), width, height);
+            var coneType = GetConeById(coneId);
+            var leftCone = CreateImageFromIcon(coneType, width, height);
+            var rightCone = CreateImageFromIcon(coneType, width, height);
 
             leftCone.RenderTransformOrigin = new Point(0.5, 0.5);
             rightCone.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -222,58 +220,23 @@ namespace AxBuilder
 
             newViewbox.RenderTransformOrigin = new Point(0.5, 0.5);
 
-            MyCanvas.Children.Add(newViewbox);
+
+            if (coneType == StartConeImage)
+            {
+                if (StartLine is not null) { MyCanvas.Children.Remove(StartLine); }
+                StartLine = newViewbox;
+            }
+            else if (coneType == FinishConeImage)
+            {
+                if (FinishLine is not null) { MyCanvas.Children.Remove(FinishLine); }
+                FinishLine = newViewbox;
+            }
 
             return newViewbox;
         }
 
 
-        private void ClearAll()
-        {
-            // Disable buttons
-            NewButton.IsEnabled = false;
-            NewButton.Opacity = 0.5;
-            SaveButton.IsEnabled = false;
-            SaveButton.Opacity = 0.5;
-            BuildButton.IsEnabled = false;
-            BuildButton.Opacity = 0.5;
-
-            // Set default tool
-            activeButton = UprightButton;
-            UprightButton.IsChecked = true;
-            PointerButton.IsChecked = false;
-            StartLineButton.IsChecked = false;
-            FinishLineButton.IsChecked = false;
-            StartingGridButton.IsChecked = false;
-            WallButton.IsChecked = false;
-            PointWallButton.IsChecked = false;
-            LyingButton.IsChecked = false;
-            MeasureScaleButton.IsChecked = false;
-
-            // clear any data
-            ImageLocation = string.Empty;
-            currentLine = null;
-            isManipulating = false;
-            isMiddleButtonPressed = false;
-            ScaleLength = 0;
-            MyImage.Source = null;
-            MyCanvas.Children.Clear();
-            ScaleStatus.IsChecked = false;
-            Distance.Text = string.Empty;
-            PlaceholderHelper.SetPlaceholder(Pixels, $"-- px");
-            PlaceholderHelper.SetPlaceholder(Distance, "0");
-            StartGrid = null;
-            StartLine = null;
-            FinishLine = null;
-
-            // Set state
-            SetIsChanged();
-
-            GC.Collect();
-        }
-
-
-        private BitmapImage GetConeById(int id)
+        private static BitmapImage GetConeById(int id)
         {
             switch (id)
             {
@@ -294,7 +257,8 @@ namespace AxBuilder
             }
         }
 
-        private int GetIdByCone(BitmapImage coneImage)
+
+        private static int GetIdByCone(BitmapImage coneImage)
         {
             if (coneImage == StandConeImage)
             {
@@ -326,31 +290,22 @@ namespace AxBuilder
             }
         }
 
-        private void SetIsChanged(bool IsOpenedOrIsSaved = false)
+
+        private bool CheckIfChanges(bool IsOpenedOrIsSaved = false)
         {
-            if (IsOpenedOrIsSaved)
+            if (IsOpenedOrIsSaved || !string.IsNullOrEmpty(ImageLocation) || MyCanvas.Children.Count > 0)
             {
-                IsChanged = false;
                 NewButton.IsEnabled = true;
                 NewButton.Opacity = 1;
                 SaveButton.IsEnabled = true;
                 SaveButton.Opacity = 1;
                 BuildButton.IsEnabled = true;
                 BuildButton.Opacity = 1;
-            }
-            else if (!string.IsNullOrEmpty(ImageLocation) || MyCanvas.Children.Count > 0)
-            {
-                IsChanged = true;
-                NewButton.IsEnabled = true;
-                NewButton.Opacity = 1;
-                SaveButton.IsEnabled = true;
-                SaveButton.Opacity = 1;
-                BuildButton.IsEnabled = true;
-                BuildButton.Opacity = 1;
+                return !IsOpenedOrIsSaved;
             }
             else
             {
-                IsChanged = false;
+                return false;
             }
         }
     }

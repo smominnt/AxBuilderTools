@@ -27,18 +27,18 @@ namespace AxBuilder
             JObject finishLine = new JObject();
 
             var distance = double.Parse(Distance.Text);
-            var isImperial = Units.SelectedIndex == 0;
-            if (isImperial)
-            {
-                distance *= 0.3048;
-            }
+            var isImperial = IsImperial;
             double centerX = MyImage.ActualWidth / 2;
             double centerY = MyImage.ActualHeight / 2;
-            double fbxRatio = distance / ScaleLength;
+            double fbxRatio = distance / ParsedPixels;
+            if (isImperial)
+            {
+                fbxRatio *= 0.3048;
+            }
 
             // Add export information
             extraData["measured_distance"] = distance;
-            extraData["measured_scale"] = ScaleLength;
+            extraData["measured_scale"] = ParsedPixels;
             extraData["is_imperial_units"] = isImperial;
             extraData["fbx_ratio"] = fbxRatio;
             extraData["image_file_path"] = ImageLocation ?? string.Empty;
@@ -157,7 +157,7 @@ namespace AxBuilder
                     case MessageBoxResult.No:
                         if (!isBuildingTrack) 
                         {
-                            ClearAll();
+                            ResetApplication();
                         }
                         tcs.SetResult(true);
                         break;
@@ -181,9 +181,9 @@ namespace AxBuilder
                 MessageBoxResult result = await ShowMessageBoxAsync("Set map scale before saving.", "Map Scale");
                 if (result == MessageBoxResult.OK)
                 {
-                    activeButton.IsChecked = false;
-                    activeButton = MeasureScaleButton;
-                    activeButton.IsChecked = true;
+                    this.ActiveButton.IsChecked = false;
+                    this.ActiveButton = MeasureScaleButton;
+                    this.ActiveButton.IsChecked = true;
                     Distance.IsEnabled = true;
                     Units.IsEnabled = true;
                     return false;
@@ -198,9 +198,9 @@ namespace AxBuilder
                 MessageBoxResult result = await ShowMessageBoxAsync("Set Start Grid before saving.", "Start Grid");
                 if (result == MessageBoxResult.OK)
                 {
-                    activeButton.IsChecked = false;
-                    activeButton = StartingGridButton;
-                    activeButton.IsChecked = true;
+                    this.ActiveButton.IsChecked = false;
+                    this.ActiveButton = StartingGridButton;
+                    this.ActiveButton.IsChecked = true;
                     Distance.IsEnabled = false;
                     Units.IsEnabled = false;
                     return false;
@@ -215,9 +215,9 @@ namespace AxBuilder
                 MessageBoxResult result = await ShowMessageBoxAsync("Set Start Line before saving.", "Start Line");
                 if (result == MessageBoxResult.OK)
                 {
-                    activeButton.IsChecked = false;
-                    activeButton = StartLineButton;
-                    activeButton.IsChecked = true;
+                    this.ActiveButton.IsChecked = false;
+                    this.ActiveButton = StartLineButton;
+                    this.ActiveButton.IsChecked = true;
                     Distance.IsEnabled = false;
                     Units.IsEnabled = false;
                     return false;
@@ -232,9 +232,9 @@ namespace AxBuilder
                 MessageBoxResult result = await ShowMessageBoxAsync("Set Finish Line before saving.", "Finish Line");
                 if (result == MessageBoxResult.OK)
                 {
-                    activeButton.IsChecked = false;
-                    activeButton = FinishLineButton;
-                    activeButton.IsChecked = true;
+                    this.ActiveButton.IsChecked = false;
+                    this.ActiveButton = FinishLineButton;
+                    this.ActiveButton.IsChecked = true;
                     Distance.IsEnabled = false;
                     Units.IsEnabled = false;
                     return false;
@@ -277,8 +277,10 @@ namespace AxBuilder
                     {
                         await streamWriter.WriteAsync(json);
                         MessageBox.Show($"Map file was saved to: {fileName}", "Saved");
+                        IsChanged = CheckIfChanges(true);
                     }
 
+                    ChangeMainWindowTitleAndText(Path.GetFileNameWithoutExtension(fileName));
                     return true;
                 }
                 catch (Exception ex)
@@ -294,8 +296,18 @@ namespace AxBuilder
             }
         }
 
-        private async Task<bool> BuildTrack(string saveJson)
+        private async Task<bool> BuildTrack()
         {
+            var saveJson = SaveJsonBuilder();
+            if (IsChanged)
+            {
+                MessageBoxResult result = await ShowMessageBoxAsync("Do you want to save the map file?", "Save Map file", true);
+                if (result == MessageBoxResult.Yes)
+                {
+                    await SaveFile(saveJson);
+                }
+            }
+
             var saveFileDialog = new SaveFileDialog();
             saveFileDialog.Filter = "KN5 files (*.kn5)|*.kn5";
             try

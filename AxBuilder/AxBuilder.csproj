@@ -11,6 +11,12 @@
     <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="obj\**" />
+    <Page Remove="obj\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="Assets\cone_lying.fbx" />
     <None Remove="Assets\cone_up.fbx" />
     <None Remove="Assets\point_cube.fbx" />

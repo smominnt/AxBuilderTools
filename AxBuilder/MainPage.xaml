@@ -52,13 +52,13 @@
                     </ui:AppBarToggleButton.Icon>
                 </ui:AppBarToggleButton>
 
-                <ui:AppBarToggleButton x:Name="StartLineButton" Grid.Row="3" Grid.Column="0" Click="AppBarToggleButton_Click" Label="START LINE" FontFamily="Arial" FontSize="12" FontWeight="Bold" IsChecked="False" Width="150" Height="59" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:AppBarToggleButton x:Name="StartLineButton" Grid.Row="3" Grid.Column="0" Click="AppBarToggleButton_Click" Label="START LINE" FontFamily="Arial" FontSize="12" FontWeight="Bold" IsChecked="False" Width="150" Height="61" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ui:AppBarToggleButton.Icon>
                         <ui:BitmapIcon UriSource="pack://application:,,,/Assets/flag_s.png"/>
                     </ui:AppBarToggleButton.Icon>
                 </ui:AppBarToggleButton>
 
-                <ui:AppBarToggleButton x:Name="FinishLineButton" Grid.Row="3" Grid.Column="1"  Click="AppBarToggleButton_Click" Label="FINISH LINE" FontFamily="Arial" FontSize="12" FontWeight="Bold" IsChecked="False" Width="150" Height="59" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:AppBarToggleButton x:Name="FinishLineButton" Grid.Row="3" Grid.Column="1"  Click="AppBarToggleButton_Click" Label="FINISH LINE" FontFamily="Arial" FontSize="12" FontWeight="Bold" IsChecked="False" Width="150" Height="61" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ui:AppBarToggleButton.Icon>
                         <ui:BitmapIcon UriSource="pack://application:,,,/Assets/flag_e.png"/>
                     </ui:AppBarToggleButton.Icon>
@@ -77,25 +77,25 @@
                     </ui:AppBarToggleButton.Icon>
                 </ui:AppBarToggleButton>
 
-                <ui:AppBarToggleButton x:Name="PointWallButton" Grid.Row="1" Grid.Column="1" Click="AppBarToggleButton_Click" Label="POINT LINE" FontFamily="Arial" FontSize="12" FontWeight="Bold"  IsChecked="False" Height="60" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:AppBarToggleButton x:Name="PointWallButton" Grid.Row="1" Grid.Column="1" Click="AppBarToggleButton_Click" Label="POINT LINE" FontFamily="Arial" FontSize="12" FontWeight="Bold" IsChecked="False" Height="61" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ui:AppBarToggleButton.Icon>
                         <ui:BitmapIcon UriSource="pack://application:,,,/Assets/pointer_wall.png"/>
                     </ui:AppBarToggleButton.Icon>
                 </ui:AppBarToggleButton>
 
-                <ui:AppBarToggleButton x:Name="LyingButton" Grid.Row="1" Click="AppBarToggleButton_Click" Label="LYING" FontFamily="Arial" FontSize="12" FontWeight="Bold"  IsChecked="False" Height="60" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:AppBarToggleButton x:Name="LyingButton" Grid.Row="1" Click="AppBarToggleButton_Click" Label="LYING" FontFamily="Arial" FontSize="12" FontWeight="Bold"  IsChecked="False" Height="61" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ui:AppBarToggleButton.Icon>
                         <ui:BitmapIcon UriSource="pack://application:,,,/Assets/lying_cone.png"/>
                     </ui:AppBarToggleButton.Icon>
                 </ui:AppBarToggleButton>
 
-                <ui:AppBarToggleButton x:Name="MeasureScaleButton" Grid.Row="4" Grid.Column="0" Click="AppBarToggleButton_Click" Label="SET SCALE" FontFamily="Arial" FontSize="12" FontWeight="Bold" IsChecked="False" Grid.ColumnSpan="2" Width="300" Height="48" VerticalAlignment="Center">
+                <ui:AppBarToggleButton x:Name="MeasureScaleButton" Grid.Row="4" Grid.Column="0" Click="AppBarToggleButton_Click" Label="SET SCALE" FontFamily="Arial" FontSize="12" FontWeight="Bold" IsChecked="False" Grid.ColumnSpan="2" Width="300" Height="61" VerticalAlignment="Center">
                     <ui:AppBarToggleButton.Icon>
                         <ui:BitmapIcon UriSource="pack://application:,,,/Assets/measure.png"/>
                     </ui:AppBarToggleButton.Icon>
                 </ui:AppBarToggleButton>
             </Grid>
-            <TextBlock Text="Map Scale" TextWrapping="Wrap" Width="100" HorizontalAlignment="Center" FontWeight="Bold" TextAlignment="Center" Height="27" FontFamily="Arial" FontSize="16" Margin="10,0,0,0"/>
+            <TextBlock Text="Map Scale" TextWrapping="Wrap" Width="100" HorizontalAlignment="Center" FontWeight="Bold" TextAlignment="Center" Height="27" FontFamily="Arial" FontSize="16" Margin="10,5,0,0"/>
 
             <TextBox x:Name="Distance" Text="" TextWrapping="Wrap" Width="150" IsEnabled="False" TextChanged="Distance_TextChanged" FontFamily="Segoe UI" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="10,0,0,0"/>
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using ModernWpf.Controls;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,7 +7,6 @@ using System.Windows.Shapes;
 using System.Windows.Media;
 using Microsoft.Win32;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace AxBuilder
 {
@@ -18,9 +16,10 @@ namespace AxBuilder
         {
             if (await SaveDialog())
             {
-                ClearAll();
+                ResetApplication();
             };
         }
+
 
         private void OpenImageButton_Click(object sender, RoutedEventArgs e)
         {
@@ -31,7 +30,13 @@ namespace AxBuilder
             if (openFileDialog.ShowDialog() == true)
             {
                 string filePath = openFileDialog.FileName;
-                LoadImage(filePath, importNew: true);
+                var image = LoadImage(filePath, importNew: true);
+                if (image is not null)
+                {
+                    MyImage.Source = image;
+                    ImageLocation = filePath;
+                }
+
             }
         }
 
@@ -40,12 +45,10 @@ namespace AxBuilder
         {
             if (await SavePreChecks())
             {
-                if (await SaveFile(SaveJsonBuilder()))
-                {
-                    SetIsChanged(true);
-                }
+                await SaveFile(SaveJsonBuilder());
             }
         }
+
 
         private async void OpenButton_Click(object sender, RoutedEventArgs e)
         {
@@ -63,6 +66,7 @@ namespace AxBuilder
                 string filePath = openFileDialog.FileName;
                 string json = File.ReadAllText(filePath);
                 LoadJson(json);
+                ChangeMainWindowTitleAndText(System.IO.Path.GetFileNameWithoutExtension(openFileDialog.FileName));
             }
         }
 
@@ -71,110 +75,101 @@ namespace AxBuilder
         {
             if (await SavePreChecks())
             {
-                var saveJson = SaveJsonBuilder();
-                if (IsChanged) 
-                {
-                    MessageBoxResult result = await ShowMessageBoxAsync("Do you want to save the map file?", "Save Map file", true);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        await SaveFile(saveJson);
-                    }
-                }
-                await BuildTrack(saveJson);
+                await BuildTrack();
             }
         }
 
 
         private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            // Deactivate the previously active button
-            if (activeButton != null)
-            {
-                activeButton.IsChecked = false;
-            }
-
-            // Activate the clicked button and update the active button
             AppBarToggleButton clickedButton = (AppBarToggleButton)sender;
+            if (this.ActiveButton is not null) { this.ActiveButton.IsChecked = false; }
             clickedButton.IsChecked = true;
-            activeButton = clickedButton;
+            this.ActiveButton = clickedButton;
 
-            if (activeButton == MeasureScaleButton)
+            if (this.ActiveButton == this.MeasureScaleButton)
             {
-                Distance.IsEnabled = true;
-                Units.IsEnabled = true;
+                this.Distance.IsEnabled = true;
+                this.Units.IsEnabled = true;
             }
             else
             {
-                Distance.IsEnabled = false;
-                Units.IsEnabled = false;
+                this.Distance.IsEnabled = false;
+                this.Units.IsEnabled = false;
             }
         }
 
+        // ----------------------------------------------------------------------
 
         private void MyCanvas_PointerPressed(object sender, MouseButtonEventArgs e)
         {
-            if (Mouse.Captured != null || (e.ChangedButton != MouseButton.Left) || activeButton == null)
+            if (Mouse.Captured != null || (e.ChangedButton != MouseButton.Left))
             {
                 return;
             }
 
 
             Mouse.Capture((Canvas)sender);
-            var ptrPt = e.GetPosition(MyCanvas);
+            var ptrPt = e.GetPosition(this.MyCanvas);
+            Viewbox viewbox = null;
 
 
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                if (activeButton == UprightButton)
+                if (this.ActiveButton == this.UprightButton)
                 {
-                    AddCone(1, ptrPt.X, ptrPt.Y);
+                    viewbox = CreateCone(1, ptrPt.X, ptrPt.Y);
                 }
-                else if (activeButton == PointerButton)
+                else if (this.ActiveButton == this.PointerButton)
                 {
-                    AddCone(2, ptrPt.X, ptrPt.Y);
+                    viewbox = CreateCone(2, ptrPt.X, ptrPt.Y);
                 }
-                else if (activeButton == LyingButton)
+                else if (this.ActiveButton == this.LyingButton)
                 {
-                    AddCone(3, ptrPt.X, ptrPt.Y);
+                    viewbox = CreateCone(3, ptrPt.X, ptrPt.Y);
                 }
-                else if (activeButton == StartingGridButton)
+                else if (this.ActiveButton == this.StartingGridButton)
                 {
-                    if (StartGrid != null)
-                    {
-                        MyCanvas.Children.Remove(StartGrid);
-                    }
-                    StartGrid = AddCone(4, ptrPt.X, ptrPt.Y);
+                    viewbox = CreateCone(4, ptrPt.X, ptrPt.Y);
+                    if (StartGrid is not null) { MyCanvas.Children.Remove(StartGrid); }
+                    StartGrid = viewbox;
                 }
                 else
                 {
-                    currentLine = new Line
+                    this.CurrentLine = new Line
                     {
                         Stroke = new SolidColorBrush(Colors.DarkOrange),
                         StrokeThickness = 2,
-                        X1 = e.GetPosition(MyCanvas).X,
-                        Y1 = e.GetPosition(MyCanvas).Y,
-                        X2 = e.GetPosition(MyCanvas).X,
-                        Y2 = e.GetPosition(MyCanvas).Y
+                        X1 = e.GetPosition(this.MyCanvas).X,
+                        Y1 = e.GetPosition(this.MyCanvas).Y,
+                        X2 = e.GetPosition(this.MyCanvas).X,
+                        Y2 = e.GetPosition(this.MyCanvas).Y
                     };
-                    MyCanvas.Children.Add(currentLine);
+                    MyCanvas.Children.Add(this.CurrentLine);
                 }
+            }
+
+            if (viewbox is not null)
+            {
+                MyCanvas.Children.Add(viewbox);
+                IsChanged = CheckIfChanges();
             }
         }
 
 
         private void MyCanvas_PointerMoved(object sender, MouseEventArgs e)
         {
-            if (currentLine == null)
+            if (this.CurrentLine is null)
             {
                 return;
             }
 
-            var ptrPt = e.GetPosition(MyCanvas);
+            var ptrPt = e.GetPosition(this.MyCanvas);
 
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                double dx = ptrPt.X - currentLine.X1;
-                double dy = ptrPt.Y - currentLine.Y1;
+                double dx = ptrPt.X - CurrentLine.X1;
+                double dy = ptrPt.Y - CurrentLine.Y1;
 
                 double angle = Math.Atan2(dy, dx) * 180.0 / Math.PI;
 
@@ -184,8 +179,8 @@ namespace AxBuilder
                 }
 
                 double distance = Math.Sqrt(dx * dx + dy * dy);
-                currentLine.X2 = currentLine.X1 + distance * Math.Cos(angle * Math.PI / 180.0);
-                currentLine.Y2 = currentLine.Y1 + distance * Math.Sin(angle * Math.PI / 180.0);
+                this.CurrentLine.X2 = this.CurrentLine.X1 + distance * Math.Cos(angle * Math.PI / 180.0);
+                this.CurrentLine.Y2 = this.CurrentLine.Y1 + distance * Math.Sin(angle * Math.PI / 180.0);
             }
         }
 
@@ -197,43 +192,36 @@ namespace AxBuilder
                 return;
             }
 
-            if (currentLine != null)
+            Viewbox viewbox = null;
+
+            if (this.CurrentLine != null)
             {
-                double dx = currentLine.X2 - currentLine.X1;
-                double dy = currentLine.Y2 - currentLine.Y1;
+                double dx = this.CurrentLine.X2 - this.CurrentLine.X1;
+                double dy = this.CurrentLine.Y2 - this.CurrentLine.Y1;
                 double length = Math.Sqrt(dx * dx + dy * dy);
                 double angle = Math.Atan2(dy, dx) * 180.0 / Math.PI;
 
-                if (activeButton == MeasureScaleButton)
+                if (this.ActiveButton == this.MeasureScaleButton)
                 {
-                    ScaleLength = length;
-                    Pixels.Text = $"{Math.Round(length, 3)} px";
+                    Pixels.Text = Math.Round(length, 3).ToString();
                 }
-                else if (activeButton == StartLineButton)
+                else if (this.ActiveButton == this.StartLineButton)
                 {
-                    if (StartLine != null)
-                    {
-                        MyCanvas.Children.Remove(StartLine);
-                    }
-                    StartLine = AddLine(5, currentLine.X1, currentLine.Y1, currentLine.X2, currentLine.Y2, angle - 90);
+                    viewbox = AddLine(5, this.CurrentLine.X1, this.CurrentLine.Y1, this.CurrentLine.X2, this.CurrentLine.Y2, angle - 90);
                 }
-                else if (activeButton == FinishLineButton)
+                else if (this.ActiveButton == this.FinishLineButton)
                 {
-                    if (FinishLine != null)
-                    {
-                        MyCanvas.Children.Remove(FinishLine);
-                    }
-                    FinishLine = AddLine(6, currentLine.X1, currentLine.Y1, currentLine.X2, currentLine.Y2, angle - 90);
+                    viewbox = AddLine(6, this.CurrentLine.X1, this.CurrentLine.Y1, this.CurrentLine.X2, this.CurrentLine.Y2, angle - 90);
                 }
                 else
                 {
-                    var useCone = activeButton == WallButton ? 1 : 3;
+                    var useCone = this.ActiveButton == this.WallButton ? 1 : 3;
 
                     double iconSpacing = 50;
-                    if (ScaleStatus.IsChecked ?? false)
+                    if (this.ScaleStatus.IsChecked ?? false)
                     {
-                        var distance = Units.SelectedIndex == 0 ? double.Parse(Distance.Text) * 0.3048 : double.Parse(Distance.Text);
-                        iconSpacing = 4 * (ScaleLength / distance);
+                        var distance = this.Units.SelectedIndex == 0 ? double.Parse(this.Distance.Text) * 0.3048 : double.Parse(this.Distance.Text);
+                        iconSpacing = 4 * (ParsedPixels / distance);
                     }
 
                     for (double i = 0; i < length + 1; i += iconSpacing)
@@ -242,24 +230,34 @@ namespace AxBuilder
                             ? 0
                             : length / i;
                         double x = (i == 0)
-                            ? currentLine.X1
-                            : currentLine.X1 + dx / t;
+                            ? CurrentLine.X1
+                            : CurrentLine.X1 + dx / t;
                         double y = (i == 0)
-                            ? currentLine.Y1
-                            : currentLine.Y1 + dy / t;
+                            ? CurrentLine.Y1
+                            : CurrentLine.Y1 + dy / t;
 
-                        AddCone(useCone, x, y, angle);
+                        MyCanvas.Children.Add(CreateCone(useCone, x, y, angle));
                     }
+                    IsChanged = CheckIfChanges();
                 }
 
-                MyCanvas.Children.Remove(currentLine);
-                currentLine = null;
+                this.MyCanvas.Children.Remove(this.CurrentLine);
+                this.CurrentLine = null;
+            }
+
+
+            if (viewbox is not null)
+            {
+                MyCanvas.Children.Add(viewbox);
+                IsChanged = CheckIfChanges();
             }
 
             ((Canvas)sender).ReleaseMouseCapture();
         }
 
-        private void Viewbox_MouseDown(object sender, MouseButtonEventArgs e)
+        // ----------------------------------------------------------------------
+
+        internal void Viewbox_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (Mouse.Captured != null || (e.ChangedButton != MouseButton.Right && e.ChangedButton != MouseButton.Left))
             {
@@ -272,41 +270,42 @@ namespace AxBuilder
                 return;
             }
 
-            isManipulating = true;
-            originalPointerPosition = e.GetPosition((Viewbox)sender);
+            this.IsManipulating = true;
+            this.OriginalPointerPosition = e.GetPosition((Viewbox)sender);
             Mouse.Capture((Viewbox)sender);
         }
 
-        private void Viewbox_MouseMove(object sender, MouseEventArgs e)
+
+        internal void Viewbox_MouseMove(object sender, MouseEventArgs e)
         {
-            if (isManipulating)
+            if (this.IsManipulating)
             {
                 if (e.LeftButton == MouseButtonState.Pressed)
                 {
-                    Point currentPosition = e.GetPosition(MyCanvas);
+                    Point currentPosition = e.GetPosition(this.MyCanvas);
 
-                    Canvas.SetLeft((UIElement)sender, currentPosition.X - originalPointerPosition.X);
-                    Canvas.SetTop((UIElement)sender, currentPosition.Y - originalPointerPosition.Y);
+                    Canvas.SetLeft((UIElement)sender, currentPosition.X - this.OriginalPointerPosition.X);
+                    Canvas.SetTop((UIElement)sender, currentPosition.Y - this.OriginalPointerPosition.Y);
                 }
             }
         }
 
-        private void Viewbox_MouseUp(object sender, MouseButtonEventArgs e)
+
+        internal void Viewbox_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton != MouseButton.Left)
             {
                 return;
             }
-            isManipulating = false;
-            isMiddleButtonPressed = false;
+            this.IsManipulating = false;
+            this.IsMiddleButtonPressed = false;
             ((Viewbox)sender).ReleaseMouseCapture();
         }
 
 
-
-        private void Viewbox_PointerWheelChanged(object sender, MouseWheelEventArgs e)
+        internal void Viewbox_PointerWheelChanged(object sender, MouseWheelEventArgs e)
         {
-            if (isManipulating)
+            if (this.IsManipulating)
             {
                 var viewBox = (Viewbox)sender;
                 var rotateTransform = viewBox.RenderTransform as RotateTransform;
@@ -325,57 +324,62 @@ namespace AxBuilder
             e.Handled = true;
         }
 
+        // ----------------------------------------------------------------------
 
         private void Distance_TextChanged(object sender, TextChangedEventArgs e)
         {
             ScaleStatus.IsChecked = false;
-            if (!string.IsNullOrEmpty(Distance.Text))
+            if (e.Source == this.Pixels && !string.IsNullOrEmpty(this.Pixels.Text))
+            {
+                if (double.TryParse(this.Pixels.Text, out var pixels))
+                {
+                    ParsedPixels = pixels;
+                }
+            }
+            else if (e.Source == this.Distance && !string.IsNullOrEmpty(this.Distance.Text))
             {
                 // remove invalid characters
-                if (!double.TryParse(Distance.Text, out var dist))
+                if (!double.TryParse(this.Distance.Text, out var dist))
                 {
-                    Distance.Text = Distance.Text.Remove(Distance.Text.Length - 1, 1);
-                    Distance.CaretIndex = Distance.Text.Length;
+                    this.Distance.Text = this.Distance.Text.Remove(this.Distance.Text.Length - 1, 1);
+                    this.Distance.CaretIndex = this.Distance.Text.Length;
+                    dist = double.Parse(this.Distance.Text);
                 }
 
                 if (dist > 5280 && Units.SelectedIndex == 0)
                 {
-                    Distance.Text = "5280";
+                    this.Distance.Text = "5280";
+                    ParsedDistance = 5280;
                 }
                 else if (dist > 1609 && Units.SelectedIndex == 1)
                 {
-                    Distance.Text = "1609";
+                    this.Distance.Text = "1609";
+                    ParsedDistance = 1609;
                 }
-
-                if (dist > 0 && ScaleLength > 0)
+                else
                 {
-                    ScaleStatus.IsChecked = true;
+                    ParsedDistance = dist;
                 }
             }
+
+            if (ParsedPixels != 0 && ParsedDistance != 0)
+            {
+                ScaleStatus.IsChecked = true;
+            }
         }
+
 
         private void Units_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!double.TryParse(Distance.Text, out var dist))
+            IsImperial = (Units.SelectedIndex == 0);
+            // trigger change in distance box
+            if (!string.IsNullOrEmpty(this.Distance.Text))
             {
-                return;
-            }
-            else if (dist > 5280 && Units.SelectedIndex == 0)
-            {
-                Distance.Text = "5280";
-            }
-            else if (dist > 1609 && Units.SelectedIndex == 1)
-            {
-                Distance.Text = "1609";
+                Distance.Text = Distance.Text;
             }
         }
 
-
-        private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            e.Handled = e.Text.Any(c => c != '.' && !char.IsDigit(c));
-        }
-
+        // ----------------------------------------------------------------------
 
         private void MyScrollViewer_PointerPressed(object sender, MouseButtonEventArgs e)
         {
@@ -385,23 +389,23 @@ namespace AxBuilder
             }
             if (e.ChangedButton == MouseButton.Middle)
             {
-                isMiddleButtonPressed = true;
-                originalPointerPosition = e.GetPosition(MyGrid);
-                MyGrid.CaptureMouse();
-                MyImage.RenderTransform = transform;
-                MyCanvas.RenderTransform = transform;
+                this.IsMiddleButtonPressed = true;
+                this.OriginalPointerPosition = e.GetPosition(MyGrid);
+                this.MyGrid.CaptureMouse();
+                this.MyImage.RenderTransform = this.Transform;
+                this.MyCanvas.RenderTransform = this.Transform;
             }
         }
 
 
         private void MyScrollViewer_PointerMoved(object sender, MouseEventArgs e)
         {
-            if (isMiddleButtonPressed && Mouse.Captured == MyGrid)
+            if (IsMiddleButtonPressed && Mouse.Captured == MyGrid)
             {
                 var currentPointerPosition = e.GetPosition(MyGrid);
-                transform.X += currentPointerPosition.X - originalPointerPosition.X;
-                transform.Y += currentPointerPosition.Y - originalPointerPosition.Y;
-                originalPointerPosition = currentPointerPosition;
+                Transform.X += currentPointerPosition.X - OriginalPointerPosition.X;
+                Transform.Y += currentPointerPosition.Y - OriginalPointerPosition.Y;
+                OriginalPointerPosition = currentPointerPosition;
             }
         }
 
@@ -412,8 +416,8 @@ namespace AxBuilder
             {
                 return;
             }
-            MyGrid.ReleaseMouseCapture();
-            isMiddleButtonPressed = false;
+            this.MyGrid.ReleaseMouseCapture();
+            this.IsMiddleButtonPressed = false;
         }
 
 
@@ -423,20 +427,20 @@ namespace AxBuilder
             {
                 return;
             }
-            ScaleTransform scaleTransform = MyImage.LayoutTransform as ScaleTransform;
+            ScaleTransform scaleTransform = this.MyImage.LayoutTransform as ScaleTransform;
 
             if (scaleTransform == null)
             {
                 scaleTransform = new ScaleTransform(1, 1);
-                MyCanvas.LayoutTransform = scaleTransform;
-                MyImage.LayoutTransform = scaleTransform;
+                this.MyCanvas.LayoutTransform = scaleTransform;
+                this.MyImage.LayoutTransform = scaleTransform;
             }
 
             double minZoom = 0.1;
             double maxZoom = 3.0;
 
             // Get the center point of the ScrollViewer
-            Point scrollViewerCenter = new Point(MyScrollViewer.ActualWidth / 2, MyScrollViewer.ActualHeight / 2);
+            Point scrollViewerCenter = new Point(this.MyScrollViewer.ActualWidth / 2, this.MyScrollViewer.ActualHeight / 2);
 
             double zoomFactor = e.Delta > 0 ? 1.1 : 0.9; // Increase or decrease zoom factor
 
@@ -455,11 +459,11 @@ namespace AxBuilder
             scaleTransform.ScaleY = clampedScaleY;
 
             // Calculate the new offset based on the center of the ScrollViewer
-            double offsetX = (scrollViewerCenter.X - e.GetPosition(MyScrollViewer).X) * (zoomFactor - 1);
-            double offsetY = (scrollViewerCenter.Y - e.GetPosition(MyScrollViewer).Y) * (zoomFactor - 1);
+            double offsetX = (scrollViewerCenter.X - e.GetPosition(this.MyScrollViewer).X) * (zoomFactor - 1);
+            double offsetY = (scrollViewerCenter.Y - e.GetPosition(this.MyScrollViewer).Y) * (zoomFactor - 1);
 
             // Adjust the translation to center the zoom around the center of the ScrollViewer
-            TranslateTransform translateTransform = MyCanvas.RenderTransform as TranslateTransform;
+            TranslateTransform translateTransform = this.MyCanvas.RenderTransform as TranslateTransform;
             if (translateTransform == null)
             {
                 translateTransform = new TranslateTransform();
@@ -473,6 +477,8 @@ namespace AxBuilder
 
             e.Handled = true; // Prevent scrolling the ScrollViewer's content
         }
+
+        // ----------------------------------------------------------------------
 
     }
 }
