@@ -98,7 +98,6 @@ MemoryStream* BuildTrack(const char* assetPath, ExportInformation exportInfo, st
     FbxManager* lSdkManager = FbxManager::Create();
     FbxScene* lFinalScene = FbxScene::Create(lSdkManager, "Final Scene");
     fs::path assetPathP = assetPath;
-    assetPathP /= "Assets";
 
     FbxScene* lGround = FbxScene::Create(lSdkManager, "Ground");
     LoadScene(lSdkManager, lGround, (assetPathP / "track.fbx").string());

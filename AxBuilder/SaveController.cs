@@ -11,8 +11,9 @@ using System.Windows.Shapes;
 using Newtonsoft.Json.Linq;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-using Path = System.IO.Path;
 using System.Text;
+using Path = System.IO.Path;
+
 
 namespace AxBuilder
 {
@@ -301,45 +302,45 @@ namespace AxBuilder
             var saveJson = SaveJsonBuilder();
             if (IsChanged)
             {
-                MessageBoxResult result = await ShowMessageBoxAsync("Do you want to save the map file?", "Save Map file", true);
-                if (result == MessageBoxResult.Yes)
-                {
-                    await SaveFile(saveJson);
-                }
+                await SaveFile(saveJson);
             }
 
-            var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "KN5 files (*.kn5)|*.kn5";
+            var folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = "Select the directory where you want to save the track files."
+            };
+
             try
             {
-                if (saveFileDialog.ShowDialog() == true)
+                if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    // Generate temp directory
+                    var outputDirectory = Path.Combine(folderBrowserDialog.SelectedPath, TrackFilename);
+                    Directory.CreateDirectory(outputDirectory);
+
+                    // Temp directory for intermediate files
                     var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                     Directory.CreateDirectory(tempDirectory);
                     var fbxFile = Path.Combine(tempDirectory, "output.fbx");
-                    var kn5File = saveFileDialog.FileName;
 
-                    // build fbx
+                    // Build FBX
                     StringBuilder errorMessage = new StringBuilder(256);
-                    if (AxFbxBuilderDll
-                        .BuildMapFbx(
-                            out IntPtr pData, 
-                            out int length, 
-                            saveJson, 
-                            AppDomain.CurrentDomain.BaseDirectory, 
-                            errorMessage, 
-                            errorMessage.Capacity) != 0)
+                    if (AxFbxBuilderDll.BuildMapFbx(
+                        out IntPtr pData,
+                        out int length,
+                        saveJson,
+                        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Fbx"),
+                        errorMessage,
+                        errorMessage.Capacity) != 0)
                     {
                         throw new Exception(errorMessage.ToString());
                     }
-                    
+
                     byte[] data = new byte[length];
                     Marshal.Copy(pData, data, 0, length);
                     await File.WriteAllBytesAsync(fbxFile, data);
                     AxFbxBuilderDll.FreeMemory(pData);
 
-                    // copy textures
+                    // Copy textures
                     var inputTextures = Path.Combine(Directory.GetCurrentDirectory(), "texture");
                     var outputTextures = Path.Combine(tempDirectory, "texture");
                     Directory.CreateDirectory(outputTextures);
@@ -350,7 +351,9 @@ namespace AxBuilder
                         File.Copy(file, destinationPath, true);
                     }
 
-                    // start fbx to kn5 conversion
+                    // Convert FBX to KN5
+                    var trackName = TrackFilename; // You might want to prompt the user for this
+                    var kn5File = Path.Combine(outputDirectory, $"{trackName}.kn5");
                     ProcessStartInfo startInfo = new ProcessStartInfo();
                     startInfo.FileName = "simplekn5converter.exe";
                     startInfo.Arguments = $"kn5track \"{kn5File}\" \"{fbxFile}\"";
@@ -360,21 +363,56 @@ namespace AxBuilder
                         process.WaitForExit();
                     }
 
-                    // clean up
+                    // Save additional files
+                    var uiDirectory = Path.Combine(outputDirectory, "ui");
+                    Directory.CreateDirectory(uiDirectory);
+
+                    var uiTrackJsonPath = Path.Combine(uiDirectory, "ui_track.json");
+                    await File.WriteAllTextAsync(uiTrackJsonPath, UiTrackJsonBuilder(trackName));
+                    var uiSourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Ui");
+                    foreach (string file in Directory.GetFiles(uiSourcePath))
+                    {
+                        string fileName = Path.GetFileName(file);
+                        string destinationPath = Path.Combine(uiDirectory, fileName);
+                        File.Copy(file, destinationPath, true);
+                    }
+
+                    // Clean up
                     Directory.Delete(tempDirectory, true);
                     return true;
                 }
                 else
                 {
-                    MessageBox.Show("No file was selected.", "Build Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("No directory was selected.", "Build Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Unable to build track file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Unable to build track files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
+        }
+
+
+        private string UiTrackJsonBuilder(string trackName)
+        {
+            JObject UiTrackJson = new JObject();
+            UiTrackJson["name"] = $"{trackName}";
+            UiTrackJson["description"] = "Course created in AX Builder, start from pit lane";
+            UiTrackJson["tags"] = new JArray("AX", "Cone course", "Autocross");
+            UiTrackJson["geotags"] = new JArray("40.0° N", "100.0° W");
+            UiTrackJson["country"] = "USA";
+            UiTrackJson["city"] = "";
+            UiTrackJson["length"] = "1.6 km";
+            UiTrackJson["width"] = "1.6 km";
+            UiTrackJson["pitboxes"] = "1";
+            UiTrackJson["run"] = "N/A";
+            UiTrackJson["author"] = "x";
+            UiTrackJson["version"] = "1.0";
+            UiTrackJson["url"] = "https://github.com/smominnt";
+
+            return UiTrackJson.ToString();
         }
 
     }

@@ -21,8 +21,9 @@ namespace AxBuilder
 
         private void ChangeMainWindowTitleAndText(string filename = "")
         {
+            TrackFilename = filename;
             Window mainWindow = Application.Current.MainWindow;
-            var title = string.IsNullOrEmpty(filename) ? "AX Builder" : $"AX Builder - {filename}";
+            var title = string.IsNullOrEmpty(TrackFilename) ? "AX Builder" : $"AX Builder - {TrackFilename}";
 
             if (mainWindow != null)
             {
@@ -38,11 +39,13 @@ namespace AxBuilder
             StartLine = null;
             FinishLine = null;
             ImageLocation = null;
+            TrackFilename = string.Empty;
             ParsedPixels = 0;
             ParsedDistance = 0;
             IsImperial = true;
             IsChanged = false;
             MyCanvas.Children.Clear();
+
 
             // Disable buttons
             NewButton.IsEnabled = false;
@@ -82,6 +85,8 @@ namespace AxBuilder
 
         private string ImageLocation { get; set; }
 
+        private string TrackFilename { get; set; }
+
         private double ParsedPixels { get; set; }
 
         private double ParsedDistance { get; set; }
@@ -89,6 +94,7 @@ namespace AxBuilder
         private bool IsImperial { get; set; }
 
         private bool IsChanged { get; set; }
+
 
 
         // ------------------------------------------------------

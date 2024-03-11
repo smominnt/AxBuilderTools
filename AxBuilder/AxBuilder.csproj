@@ -19,8 +19,16 @@
   <ItemGroup>
     <None Remove="Assets\cone_lying.fbx" />
     <None Remove="Assets\cone_up.fbx" />
+    <None Remove="Assets\fbx\cone_lying.fbx" />
+    <None Remove="Assets\fbx\cone_up.fbx" />
+    <None Remove="Assets\fbx\point_cube.fbx" />
+    <None Remove="Assets\fbx\track.fbx" />
+    <None Remove="Assets\fbx\wall.fbx" />
     <None Remove="Assets\point_cube.fbx" />
     <None Remove="Assets\track.fbx" />
+    <None Remove="Assets\ui\outline.png" />
+    <None Remove="Assets\ui\outline_cropped.png" />
+    <None Remove="Assets\ui\preview.png" />
     <None Remove="Assets\wall.fbx" />
     <None Remove="ksMathCore.dll" />
     <None Remove="ksNet.dll" />
@@ -32,6 +40,30 @@
     <None Remove="texture\simple.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\fbx\cone_lying.fbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\fbx\cone_up.fbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\fbx\point_cube.fbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\fbx\track.fbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\fbx\wall.fbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\ui\outline.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\ui\outline_cropped.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\ui\preview.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="content\texture\cloud.dds">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -66,21 +98,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="content\texture\cube.dds">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\cone_lying.fbx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\cone_up.fbx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\point_cube.fbx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\track.fbx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\wall.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="texture\concrete.png">

@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>", Scope = "member", Target = "~M:AxBuilder.FbxKn5Converter.LoadFbxAndSaveKn5(System.String,System.String,ksNet.ksGraphics,System.Boolean)")]
+[assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>", Scope = "member", Target = "~M:AxBuilder.MainPage.BuildTrack~System.Threading.Tasks.Task{System.Boolean}")]
