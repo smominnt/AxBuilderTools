@@ -379,6 +379,12 @@ namespace AxBuilder
 
                     // Clean up
                     Directory.Delete(tempDirectory, true);
+
+                    MessageBox.Show(
+                        $"Track was saved to: {outputDirectory}\n\n"
+                        + "To use this track, copy the above directory to your Assetto Corsa tracks folder: \n\n"
+                        + "C:\\Program Files (x86)\\Steam\\steamapps\\common\\assettocorsa\\content\\tracks", 
+                        "Track Built");
                     return true;
                 }
                 else

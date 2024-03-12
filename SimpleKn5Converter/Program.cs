@@ -48,7 +48,10 @@ namespace SimpleKn5Converter
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Form form = new Form();
-			form.Size = new Size(400, 200);
+            form.FormBorderStyle = FormBorderStyle.FixedSingle;
+            form.ControlBox = false;
+            form.Size = new Size(400, 200);
+            form.StartPosition = FormStartPosition.CenterScreen;
             Panel panel = new Panel();
             panel.Dock = DockStyle.Fill;
             panel.Location = new Point(440, 28);
@@ -79,7 +82,9 @@ namespace SimpleKn5Converter
             loadingLabel.Font = new Font("Arial", 16, FontStyle.Bold);
             loadingLabel.TextAlign = ContentAlignment.MiddleCenter;
             loadingLabel.Dock = DockStyle.Fill;
-            loadingLabel.Text = $"Building KN5 {(convertModeTrack ? "track" : "car")} file...";
+            loadingLabel.Text = 
+				$"Building KN5 {(convertModeTrack ? "track" : "car")} file...\n\n" + 
+				"(This window will close automatically)";
             panel.Controls.Add(loadingLabel);
             
             ksGraphics ksGraphics = new ksGraphics(panel.Handle);
