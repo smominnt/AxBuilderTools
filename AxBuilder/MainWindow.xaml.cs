@@ -1,5 +1,4 @@
-﻿using ModernWpf.Controls;
-using System;
+﻿using System.Diagnostics;
 using System.Windows;
 
 namespace AxBuilder
@@ -32,6 +31,17 @@ namespace AxBuilder
                 + "Created by: https://github.com/smominnt\n"
                 + "Special thanks: Houston Region SCCA", 
                 "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+
+        private void HelpButton_Handler(object sender, RoutedEventArgs e)
+        {
+            string url = "https://github.com/smominnt/AxBuilderTools";
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
         }
 
         private static readonly string Version = "1.0";

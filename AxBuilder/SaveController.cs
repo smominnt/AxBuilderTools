@@ -302,7 +302,11 @@ namespace AxBuilder
             var saveJson = SaveJsonBuilder();
             if (IsChanged)
             {
-                await SaveFile(saveJson);
+                MessageBox.Show("Map file must be saved before building", "Save map file", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (await SaveFile(saveJson))
+                {
+                    return false;
+                }
             }
 
             var folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog
@@ -352,7 +356,7 @@ namespace AxBuilder
                     }
 
                     // Convert FBX to KN5
-                    var trackName = TrackFilename; // You might want to prompt the user for this
+                    var trackName = TrackFilename; 
                     var kn5File = Path.Combine(outputDirectory, $"{trackName}.kn5");
                     ProcessStartInfo startInfo = new ProcessStartInfo();
                     startInfo.FileName = "simplekn5converter.exe";
@@ -401,7 +405,7 @@ namespace AxBuilder
         }
 
 
-        private string UiTrackJsonBuilder(string trackName)
+        private static string UiTrackJsonBuilder(string trackName)
         {
             JObject UiTrackJson = new JObject();
             UiTrackJson["name"] = $"{trackName}";

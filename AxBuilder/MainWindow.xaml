@@ -26,6 +26,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="FileTitle" Text="AX Builder" Style="{StaticResource HeaderTextBlockStyle}" FontSize="22" />
+                <Button Grid.Column="2" Content="Help" Margin="-30,0,0,0" Click="HelpButton_Handler"/>
                 <Button Grid.Column="2" Content="About" Margin="24,0,0,0" Click="AboutButton_Handler"/>
             </Grid>
         </ui:SimpleStackPanel>
