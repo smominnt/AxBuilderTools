@@ -18,7 +18,16 @@
             <!-- This row will take up remaining space -->
         </Grid.RowDefinitions>
         <ui:SimpleStackPanel x:Name="StackPanel" Grid.Row="0" Margin="12" Spacing="24">
-            <TextBlock x:Name="FileTitle" Text="AX Builder" Style="{StaticResource HeaderTextBlockStyle}" FontSize="22" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <!-- This column will take up remaining space -->
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="FileTitle" Text="AX Builder" Style="{StaticResource HeaderTextBlockStyle}" FontSize="22" />
+                <Button Grid.Column="2" Content="About" Margin="24,0,0,0" Click="AboutButton_Handler"/>
+            </Grid>
         </ui:SimpleStackPanel>
         <Frame x:Name="MainFrame" Grid.Row="1" NavigationUIVisibility="Hidden"
                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>

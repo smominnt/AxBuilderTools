@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using ModernWpf.Controls;
+using System;
+using System.Windows;
 
 namespace AxBuilder
 {
@@ -21,6 +23,18 @@ namespace AxBuilder
                 e.Cancel = true;
             }
         }
+
+        private void AboutButton_Handler(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(
+                $"AX Builder version {Version}\n"
+                + "Tool to build Autocross and other cone driving courses\n" 
+                + "Created by: https://github.com/smominnt\n"
+                + "Special thanks: Houston Region SCCA", 
+                "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private static readonly string Version = "1.0";
 
         readonly MainPage Page = null;
     }
