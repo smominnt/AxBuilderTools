@@ -10,6 +10,12 @@
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\build\obj</BaseIntermediateOutputPath>
     <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Remove="obj\**" />
     <EmbeddedResource Remove="obj\**" />
